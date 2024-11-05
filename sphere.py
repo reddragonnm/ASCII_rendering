@@ -1,13 +1,13 @@
 import numpy as np
 
 sphere_dist = 50
-sphere_radius = 30
+sphere_radius = 25
 
-screen_size = 40
+screen_size = 25
 screen_dist = 15
 
-theta_spacing = 0.05
-phi_spacing = 0.05
+theta_points = 100
+phi_points = 100
 
 
 def Rx(theta):
@@ -42,10 +42,8 @@ while True:
     screen = [[" " for _ in range(screen_size)] for __ in range(screen_size)]
     zbuffer = [[0 for _ in range(screen_size)] for __ in range(screen_size)]
 
-    theta = 0
-    while theta < np.pi:
-        phi = 0
-        while phi < 2 * np.pi:
+    for theta in np.linspace(0, 2 * np.pi, theta_points):
+        for phi in np.linspace(0, 2 * np.pi, phi_points):
             normal = np.matmul(
                 np.array([np.cos(theta), np.sin(theta), 0]),
                 Rx(phi),
@@ -63,10 +61,10 @@ while True:
                     zbuffer[y_screen][x_screen] = z_inv
                     screen[y_screen][x_screen] = ".,-~:;=!*#$@"[int(luminance * 11)]
 
-            phi += phi_spacing
-        theta += theta_spacing
-
     for row in screen:
-        print("".join(row))
+        for el in row:
+            print(el, end="")
+            print(el, end="")
+        print()
 
     i += 0.07

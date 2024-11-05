@@ -1,14 +1,12 @@
 import numpy as np
 
-torus_dist = 5
-torus_radius1 = 2
-torus_radius2 = 1
+cube_dist = 40
+cube_size = 30
 
-screen_size = 35
-screen_dist = screen_size * torus_dist * 3 / (8 * (torus_radius1 + torus_radius2))
+cube_points = 20
 
-theta_spacing = 0.1
-phi_spacing = 0.1
+screen_size = 40
+screen_dist = 10
 
 
 def Rx(theta):
@@ -33,52 +31,59 @@ def Rz(theta):
 
 
 A = 0
-B = 0
+B = 0.5
 
-i = 0.1
 print(chr(27) + "[2J")
 while True:
     print("\x1b[H")
 
-    light_coord_new = np.array([0, 1, -1]) / np.sqrt(2)
-    # light_coord = np.array([np.sin(i), np.cos(i), -1], dtype=np.float64)
-    # light_coord_new = light_coord / np.linalg.norm(light_coord)
+    light_coord_new = np.array([0, 0, -1]) / np.sqrt(1)
 
     screen = [[" " for _ in range(screen_size)] for __ in range(screen_size)]
     zbuffer = [[0 for _ in range(screen_size)] for __ in range(screen_size)]
 
-    theta = 0
-    while theta < 2 * np.pi:
-        phi = 0
-        while phi < 2 * np.pi:
-            normal = (
-                np.array([np.cos(theta), np.sin(theta), 0]) @ Ry(phi) @ Rx(A) @ Rz(B)
-            )
-            coords = np.array(
-                [
-                    torus_radius1 + torus_radius2 * np.cos(theta),
-                    torus_radius2 * np.sin(theta),
-                    0,
-                ]
-            ) @ Ry(phi) @ Rx(A) @ Rz(B) + np.array([0, 0, torus_dist])
+    for x in np.linspace(0, cube_size, cube_points):
+        for y in np.linspace(0, cube_size, cube_points):
+            for z in np.linspace(0, cube_size, cube_points):
+                if x == 0:
+                    normal = np.array([-1, 0, 0])
+                elif x == cube_size:
+                    normal = np.array([1, 0, 0])
 
-            z_inv = 1 / coords[2]
+                elif y == 0:
+                    normal = np.array([0, -1, 0])
+                elif y == cube_size:
+                    normal = np.array([0, 1, 0])
 
-            x_screen = int(screen_size / 2 + screen_dist * coords[0] * z_inv)
-            y_screen = int(screen_size / 2 - screen_dist * coords[1] * z_inv)
+                elif z == 0:
+                    normal = np.array([0, 0, -1])
+                elif z == cube_size:
+                    normal = np.array([0, 0, 1])
 
-            luminance = np.dot(normal, light_coord_new)
-            if luminance > 0:
-                if z_inv > zbuffer[y_screen][x_screen]:
-                    zbuffer[y_screen][x_screen] = z_inv
-                    screen[y_screen][x_screen] = ".,-~:;=!*#$@"[int(luminance * 11)]
+                else:
+                    continue
 
-            phi += phi_spacing
-        theta += theta_spacing
+                normal_new = normal @ Ry(A) @ Rz(B)
+                coords = (
+                    np.array([x, y, z])
+                    - np.array([cube_size / 2, cube_size / 2, cube_size / 2])
+                ) @ Ry(A) @ Rz(B) + np.array([0, 0, cube_dist])
+                z_inv = 1 / coords[2]
+
+                x_screen = int(screen_size / 2 + screen_dist * coords[0] * z_inv)
+                y_screen = int(screen_size / 2 - screen_dist * coords[1] * z_inv)
+
+                luminance = np.dot(normal_new, light_coord_new)
+                if luminance > 0:
+                    if z_inv > zbuffer[y_screen][x_screen]:
+                        zbuffer[y_screen][x_screen] = z_inv
+                        screen[y_screen][x_screen] = ".,-~:;=!*#$@"[int(luminance * 11)]
 
     for row in screen:
-        print("".join(row))
+        for el in row:
+            print(el, end="")
+            print(el, end="")
+        print()
 
-    i += 0.07
     A += 0.1
     B += 0.1
